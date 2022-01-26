@@ -1,0 +1,61 @@
+before:
+  hooks:
+    - go generate -v ./...
+builds:
+- id: mdwsvr
+  env:
+  - CGO_ENABLED=0
+  main: server.go
+  binary: mdwsvr
+  ldflags:
+  - -s -w -X github.com/bhojpur/middleware/cmd/server.version={{.Version}}-{{.ShortCommit}}
+- id: mdwctl
+  env:
+  - CGO_ENABLED=0
+  main: client.go
+  binary: mdwctl
+  flags:
+    - -tags=mdwctl
+  ldflags:
+  - -s -w -X github.com/bhojpur/middleware/cmd/client.version={{.Version}}-{{.ShortCommit}}
+archives:
+- id: mdwsvr
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - mdwsvr
+- id: mdwctl
+  files:
+  - "none*"
+  format: binary
+  builds:
+  - mdwctl
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  prerelease: auto
+dockers:
+  - goos: linux
+    goarch: amd64
+    goarm: ''
+    dockerfile: Dockerfile
+    image_templates:
+    - "ghcr.io/bhojpur/middleware:{{ .Tag }}"
+    extra_files:
+    - README.md
